@@ -1,0 +1,49 @@
+body, html {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+h1 {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.buzzer {
+  display: flex;
+  width: 80%;
+  height: 80%;
+  background-color: green;
+  border-radius: 50%;
+  margin: auto;
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+}
+
+.buzzer_disabled {
+  display: flex;
+  width: 80%;
+  height: 80%;
+  background-color: grey;
+  border-radius: 50%;
+  margin: auto;
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+}
+
+@media only screen and (max-width: 600px) {
+  /* Styles spécifiques aux téléphones */
+  .buzzer {
+    width: 80%;
+    height: 80%;
+  }
+}
+

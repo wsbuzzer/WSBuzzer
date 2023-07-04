@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+ 
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <title>Mega Buzzer yolo</title>
+</head>
+ 
+<body>
+    <form id="MonForm">
+        Game name   : <input type="text" id="game_name">
+	Password    : <input type="password" id="game_password">
+	<div id="player_name_div" style="display:block">Player name : <input type="text" id="player_name"></div>
+	</br>
+	<input type="radio" id="join_radio" name="action_select" onclick="join_or_create()" value="join" checked>
+  	<label for="join">Join</label>
+  	<input type="radio" id="create_radio" name="action_select" onclick="join_or_create()" value="create">
+  	<label for="create">Create</label><br>
+	<button id="join_button" type="submit" name="action" value="join" onclick="check_join_game()" style="display:block">Join game</button>
+    	<button id="create_button" type="submit" name="action" value="create" onclick="check_create_game()" style="display:none">Create !</button>
+    </form>
+</body>
+ 
+<script>
+    /* Initialisation */
+    var form = document.getElementById("MonForm");
+    function handleForm(event) { event.preventDefault(); } 
+    form.addEventListener('submit', handleForm);
+
+    /* create WebSocket Connection */
+    const socket = new WebSocket('ws://127.0.0.1:8765');
+    socket.addEventListener('open', function (event) {
+	console.log("Connected to the server");
+    });
+
+	
+    /* When a message is received from WebSocket */
+    socket.addEventListener("message", ({ data }) => {
+        const event = JSON.parse(data);
+	switch (event.type){
+
+	    /* You can create a game */
+	    case "create":
+		var expires = "";
+		var date = new Date();
+		date.setTime(date.getTime() + (12*60*60*1000)); //12 hours
+		expires = "; expires=" + date.toUTCString();
+		var cookie_content = {
+			game_name: document.getElementById("game_name").value,
+			password: document.getElementById("game_password").value
+		};
+	        document.cookie = "GameMaster=" + JSON.stringify(cookie_content) + expires + "; path=/;SameSite=Strict";
+		window.location.replace("gamemaster.html");
+	        break;
+
+	    /* You can join a game */
+	    case "join":
+	        var expires = "";
+		var date = new Date();
+		date.setTime(date.getTime() + (12*60*60*1000)); //12 hours
+		expires = "; expires=" + date.toUTCString();
+		
+		/* Create a cookie to identify user on player HTML page */
+		var cookie_content = {
+			game_name: document.getElementById("game_name").value,
+			password: document.getElementById("game_password").value,
+			player_name : document.getElementById("player_name").value
+		};
+	        document.cookie = "GamePlayer=" + JSON.stringify(cookie_content) + expires + "; path=/;SameSite=Strict"
+		
+		/* Go to the player HTML page */
+		window.location.replace("buzzer.html");
+	        break;
+
+	    /* There is an error */
+            case "error":
+	        alert("ERROR : " + event.message);
+		break;
+	
+	    default:
+	        console.log(event.message);
+	}
+    });
+
+    /* Ask the WebSocket if you can join the given game with your given password */
+    function check_join_game(){
+	var data = {
+	    action: "check_join",
+	    game_name: document.getElementById("game_name").value,
+	    password: document.getElementById("game_password").value,
+	    player_name : document.getElementById("player_name").value
+	};
+        socket.send(JSON.stringify(data));
+    }	
+
+    /* Ask if you can create a game with the given name */
+    function check_create_game(){
+	var data = {
+	    action: "check_create",
+	    game_name: document.getElementById("game_name").value,
+	};
+        socket.send(JSON.stringify(data));
+    }
+
+   
+    function join_or_create() {
+	    if (document.getElementById("join_radio").checked){
+	    	document.getElementById("player_name_div").style.display = "block";
+		document.getElementById("join_button").style.display = "block";
+		document.getElementById("create_button").style.display = "none";
+	    }
+	    else if (document.getElementById("create_radio").checked){
+	    	document.getElementById("player_name_div").style.display = "none";
+		document.getElementById("join_button").style.display = "none";
+		document.getElementById("create_button").style.display = "block";
+	    }
+    }
+</script>
+ 
+</html>

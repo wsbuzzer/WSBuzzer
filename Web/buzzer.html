@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+ 
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="buzzer.css">
+    <title>Mega Buzzer yolo</title>
+</head>
+ 
+<body>
+	<h1>BUZZER !</h1>
+	<div id="buzzer" class="buzzer" onclick="buzz()"></div>
+</body>
+ 
+<script>
+    /* Initialisation */
+    function getCook(cookiename) { // Stolen from StackOverflow https://stackoverflow.com/a/11767598
+        var cookiestring=RegExp(cookiename+"=[^;]+").exec(document.cookie);
+        return decodeURIComponent(!!cookiestring ? cookiestring.toString().replace(/^[^=]+./,"") : "");
+    }
+
+    cookievalue = JSON.parse(getCook("GamePlayer"));
+    game_name = cookievalue["game_name"];
+    password = cookievalue["password"];
+    player_name = cookievalue["player_name"];
+
+    const socket = new WebSocket('ws://127.0.0.1:8765');
+    socket.addEventListener('open', function (event) {
+	console.log("Connected to the server");
+	var data = {
+	    action: "join",
+	    game_name: game_name,
+	    password: password,
+	    player_name: player_name
+        };
+
+        socket.send(JSON.stringify(data));
+    });
+
+   var buzzer = document.getElementById("buzzer");
+
+    socket.addEventListener('message', ({data }) => {
+	    const event = JSON.parse(data);
+	    switch (event.type){
+                case "info":
+		    console.log("Info : " + event.message);
+		    break;
+		case "error":
+	            alert(event.message);
+	            window.location(replace("index.html"));
+		    break;
+		case "buzzed":
+		    buzzer.classList.add('buzzer_disabled');
+		    buzzer.classList.remove('buzzer');
+		    break;
+		case "enable_buzz":
+		    buzzer.classList.add('buzzer');
+		    buzzer.classList.remove('buzzer_disabled');
+		    break;
+	    }
+    });
+
+    function buzz(){
+    	var data = {
+		action: "buzz"
+	};
+	socket.send(JSON.stringify(data));
+    }
+ 
+    window.addEventListener('beforeunload', function() { //To close the websocket when leaving the web page
+        var data = {
+        	action: "disconnect"
+    	};
+   	socket.send(JSON.stringify(data));
+    });
+
+</script>
+ 
+</html>
